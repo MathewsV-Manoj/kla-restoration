@@ -1,0 +1,13 @@
+venv/
+env/
+__pycache__/
+*.pyc
+data/
+runs/
+checkpoints/last.pth
+checkpoints_v2/
+checkpoints_v3/
+checkpoints_ft/
+.DS_Store
+Thumbs.db
+outputs/restored/

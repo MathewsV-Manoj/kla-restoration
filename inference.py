@@ -88,6 +88,8 @@ def run_inference(input_dir, output_dir, checkpoint, device):
             lr_t = torch.from_numpy(lr).unsqueeze(0).unsqueeze(0).to(device)
             pred = model(lr_t)                           # (1,1,256,256), [0,1]
             out = pred.squeeze().cpu().numpy().astype(np.float32)
+            out = np.nan_to_num(out, nan=0.0, posinf=1.0, neginf=0.0)
+            out = np.clip(out, 0.0, 1.0)
             np.save(os.path.join(output_dir, os.path.basename(f)), out)
 
             if device.type == "cuda":

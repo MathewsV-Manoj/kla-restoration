@@ -87,7 +87,7 @@ The inference script takes an **input directory** of degraded `.npy` images and 
 **output directory** for the restored results. It runs with no manual edits:
 
 ```bash
-python inference.py <input_dir> <output_dir>
+python run.py <input-dir> <output-dir>
 ```
 
 Example:
@@ -165,3 +165,9 @@ Checkpoints are written to `checkpoints/` (best + last); TensorBoard logs to `ru
    Attention Networks (RCAN)." *ECCV*, 2018.
 4. R. Zhang et al. "The Unreasonable Effectiveness of Deep Features as a Perceptual
    Metric (LPIPS)." *CVPR*, 2018.
+
+## Run (official)
+
+python run.py <input-dir> <output-dir>
+
+Weights: models/best.pth (also in checkpoints/best.pth). Outputs are .npy, grayscale, in [0,1], NaN/Inf-free.

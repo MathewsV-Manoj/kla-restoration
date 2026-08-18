@@ -7,7 +7,7 @@ Two modes:
    test folder, saves restored 256x256 outputs, and reports inference
    speed (total + per-image latency + throughput).
 
-       python evaluate.py --checkpoint checkpoints/best.pth \
+       python evaluate.py --checkpoint models/best.pth \
            --input data/Test_NoisyLR/NoisyLR --output outputs/restored
 
 2) PAIRED METRICS (--paired): runs on a folder that has both GT/ and
@@ -15,7 +15,7 @@ Two modes:
    PSNR and SSIM against ground truth. Use this to get the numbers
    for your innovation slide.
 
-       python evaluate.py --checkpoint checkpoints/best.pth \
+       python evaluate.py --checkpoint models/best.pth \
            --input data/train --paired
 
 The script is fully self-contained: given a checkpoint and an input
@@ -175,7 +175,7 @@ def run_paired_eval(model, root_dir, device, limit=None):
 
 def parse_args():
     p = argparse.ArgumentParser()
-    p.add_argument("--checkpoint", type=str, default="checkpoints/best.pth")
+    p.add_argument("--checkpoint", type=str, default="models/best.pth")
     p.add_argument("--input", type=str, default="data/Test_NoisyLR/NoisyLR")
     p.add_argument("--output", type=str, default="outputs/restored")
     p.add_argument("--paired", action="store_true",

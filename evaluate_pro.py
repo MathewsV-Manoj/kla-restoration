@@ -31,11 +31,11 @@ USAGE
 
     # ensemble v1+v3 + TTA (maximum quality)
     python evaluate_pro.py data/train --paired --limit 200 --tta \
-        --checkpoint checkpoints/best.pth --checkpoint2 checkpoints_v3/best.pth
+        --checkpoint models/best.pth --checkpoint2 checkpoints_v3/best.pth
 
   Generate final restored test outputs (maximum quality):
     python evaluate_pro.py data/Test_NoisyLR/NoisyLR outputs/restored --tta \
-        --checkpoint checkpoints/best.pth --checkpoint2 checkpoints_v3/best.pth
+        --checkpoint models/best.pth --checkpoint2 checkpoints_v3/best.pth
 """
 
 import os
@@ -205,7 +205,7 @@ def parse_args():
     p = argparse.ArgumentParser()
     p.add_argument("input")
     p.add_argument("output", nargs="?", default="outputs/restored")
-    p.add_argument("--checkpoint", default="checkpoints/best.pth")
+    p.add_argument("--checkpoint", default="models/best.pth")
     p.add_argument("--checkpoint2", default=None,
                    help="Second checkpoint to ensemble (e.g. checkpoints_v3/best.pth)")
     p.add_argument("--tta", action="store_true", help="Enable 8x test-time augmentation")

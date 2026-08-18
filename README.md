@@ -15,6 +15,20 @@ order), the model reconstructs a clean, full-resolution image.
 
 ---
 
+## Quick start
+
+```bash
+pip install -r requirements.txt
+python run.py <input-dir> <output-dir>
+```
+
+`run.py` reads every `.npy` in `<input-dir>`, creates `<output-dir>` if needed, and
+writes one restored `.npy` per input under the same filename. Model weights ship in
+`models/best.pth` — no internet access, API keys, extra downloads, or manual
+configuration are required at inference time.
+
+---
+
 ## Results (validation, 200 samples)
 
 | Metric | Value |
@@ -34,8 +48,11 @@ Timing method: end-to-end wall-clock, CUDA-synchronized, per image.
 
 ```
 kla-restoration/
-├── README.md               # this file
+├── run.py                  # SUBMISSION ENTRY POINT (input dir -> output dir)
 ├── requirements.txt        # pinned dependencies
+├── README.md               # this file
+├── models/
+│   └── best.pth            # final trained weights (epoch 83), ships with repo
 ├── dataset.py              # dataset loader, train/val split, augmentation
 ├── model.py                # RestorationNet v1 (final model)
 ├── model_v2.py             # v2 (channel attention) - ablation
@@ -45,12 +62,10 @@ kla-restoration/
 ├── train_v2.py             # training script (v2, ablation)
 ├── train_v3.py             # training script (v3, ablation)
 ├── finetune_v1.py          # optional edge-loss fine-tuning experiment
-├── inference.py            # STANDALONE inference (input dir -> output dir)
+├── inference.py            # inference + speed benchmark (same model as run.py)
 ├── evaluate.py             # inference + optional paired metrics
 ├── evaluate_pro.py         # TTA + ensemble evaluation
 ├── make_figures.py         # before/after comparison figures
-├── checkpoints/
-│   └── best.pth            # final trained weights (epoch 83)
 └── outputs/
     ├── figures/            # before/after comparison images
     └── restored_final/     # 400 restored test outputs
@@ -71,34 +86,64 @@ python -m venv venv
 # Linux/Mac:
 source venv/bin/activate
 
-# 2. Install PyTorch with CUDA support
-#    (cu128 wheel required for Blackwell / RTX 50-series GPUs)
-pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu128
-
-# 3. Install remaining dependencies
+# 2. Install all dependencies
+#    requirements.txt already declares the PyTorch cu128 index, which is
+#    required for Blackwell / RTX 50-series GPUs. On other NVIDIA GPUs any
+#    CUDA-enabled build of torch >= 2.1 works.
 pip install -r requirements.txt
 ```
 
+No further configuration is needed. The trained weights are committed in
+`models/best.pth`, so inference requires **no internet access, no API keys and
+no additional model downloads**.
+
 ---
 
-## Running inference (the standalone evaluation script)
+## Running the solution
 
-The inference script takes an **input directory** of degraded `.npy` images and an
-**output directory** for the restored results. It runs with no manual edits:
+`run.py` is the entry point. It takes an **input directory** of degraded `.npy`
+images and an **output directory** for the restored results, and runs with no
+manual edits:
 
 ```bash
-python inference.py <input_dir> <output_dir>
+python run.py <input-dir> <output-dir>
 ```
 
 Example:
 
 ```bash
-python inference.py data/Test_NoisyLR/NoisyLR outputs/restored
+python run.py data/Test_NoisyLR/NoisyLR outputs/restored
 ```
 
-It loads weights automatically from `checkpoints/best.pth`, restores every `.npy`
-in the input directory, saves each 256×256 float32 result under the same filename,
-and reports inference-speed statistics.
+Weights load automatically from `models/best.pth`. The output directory is
+created if it does not already exist.
+
+### Input / output contract
+
+| | Input | Output |
+|---|---|---|
+| Format | `.npy` | `.npy`, same filename as its input |
+| Shape | `(H, W)` grayscale, e.g. 128×128 | `(2H, 2W)` grayscale, e.g. 256×256 |
+| dtype | any numeric | `float32` |
+| Range | may fall outside `[0,1]` (speckle noise) | strictly `[0,1]`, no `NaN` / `Inf` |
+
+Every `.npy` file in the input directory produces exactly one output file.
+Outputs are clipped to `[0,1]` and scrubbed of non-finite values before saving.
+Inputs shaped `(H, W, 1)` or `(1, H, W)` are also accepted and squeezed to
+`(H, W)`. If the network were to fail on any single image, a bicubic upsample of
+that input is written instead, so the output set is never incomplete.
+
+Optional flags: `--checkpoint <path>` to use different weights, and
+`--device cpu|cuda` to force a device (default: CUDA when available).
+
+### Inference speed benchmark (optional)
+
+`inference.py` runs the same model and additionally reports end-to-end
+per-image latency and throughput:
+
+```bash
+python inference.py <input_dir> <output_dir>
+```
 
 ### Computing quality metrics (optional, needs ground truth)
 
@@ -118,6 +163,8 @@ python train.py --epochs 100 --batch_size 4 --num_workers 0
 ```
 
 Checkpoints are written to `checkpoints/` (best + last); TensorBoard logs to `runs/`.
+Those are local training artifacts - the weights shipped for evaluation live in
+`models/best.pth`.
 
 ---
 
@@ -152,6 +199,25 @@ Checkpoints are written to `checkpoints/` (best + last); TensorBoard logs to `ru
   reporting**, not part of the restoration model. Package: `lpips` (BSD-3-Clause).
 - No external training datasets or pretrained weights are used in the model itself;
   the network is trained from scratch on the provided KLA dataset.
+
+---
+
+## Submission checklist
+
+| Requirement | Status |
+|---|---|
+| `run.py` present, invoked as `python run.py <input-dir> <output-dir>` | ✅ |
+| Reads all `.npy` files from the input directory | ✅ |
+| Creates the output directory if it does not exist | ✅ |
+| One restored `.npy` per input file | ✅ |
+| Output filename matches its input filename | ✅ |
+| Outputs are grayscale arrays of shape `(H, W)` | ✅ |
+| Output values within `[0,1]`, no `NaN` / `Inf` | ✅ clipped + scrubbed before saving |
+| Correct target resolution (2× the input, 128×128 → 256×256) | ✅ |
+| Model weights and supporting files included | ✅ `models/best.pth` (committed) |
+| `requirements.txt` with pinned versions | ✅ |
+| `README.md` with setup and execution instructions | ✅ this file |
+| Runs on an NVIDIA GPU with no internet, API keys, downloads, or manual config | ✅ CPU fallback included |
 
 ---
 

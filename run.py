@@ -4,16 +4,18 @@ import os, sys, glob, inspect
 import numpy as np
 import torch
 
+_HERE = os.path.dirname(os.path.abspath(__file__))
+
 
 def _find_checkpoint():
-    for p in ("models/best.pth", "checkpoints/best.pth"):
+    for rel in (("models", "best.pth"), ("checkpoints", "best.pth")):
+        p = os.path.join(_HERE, *rel)
         if os.path.exists(p):
             return p
-    return "checkpoints/best.pth"
+    return os.path.join(_HERE, "checkpoints", "best.pth")
 
 
 def _sanitize_outputs(output_dir):
-    # Guarantee the graded contract on every saved file: grayscale, [0,1], no NaN/Inf.
     for f in glob.glob(os.path.join(output_dir, "*.npy")):
         a = np.load(f).astype(np.float32)
         a = np.squeeze(a)
@@ -31,6 +33,8 @@ def main():
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     ckpt = _find_checkpoint()
 
+    if _HERE not in sys.path:
+        sys.path.insert(0, _HERE)
     import inference as inf
     fn = inf.run_inference
     names = list(inspect.signature(fn).parameters)

@@ -84,7 +84,7 @@ def run_inference(input_dir, output_dir, checkpoint, device):
         for f in files:
             t0 = time.perf_counter()
 
-            lr = np.load(f).astype(np.float32)          # (128,128), unclamped
+            lr = np.squeeze(np.load(f).astype(np.float32))   # unclamped, any rank -> (H,W)
             lr_t = torch.from_numpy(lr).unsqueeze(0).unsqueeze(0).to(device)
             pred = model(lr_t)                           # (1,1,256,256), [0,1]
             out = pred.squeeze().cpu().numpy().astype(np.float32)

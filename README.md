@@ -171,3 +171,15 @@ Checkpoints are written to `checkpoints/` (best + last); TensorBoard logs to `ru
 python run.py <input-dir> <output-dir>
 
 Weights: models/best.pth (also in checkpoints/best.pth). Outputs are .npy, grayscale, in [0,1], NaN/Inf-free.
+
+## Official run command
+
+```bash
+python run.py <input-dir> <output-dir>
+```\n
+Example:
+
+```bash
+python run.py data/Test_NoisyLR/NoisyLR outputs/restored
+```\n
+Structure: run.py, inference.py, model.py, requirements.txt, README.md, models/best.pth

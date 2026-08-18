@@ -4,7 +4,7 @@ __pycache__/
 *.pyc
 data/
 runs/
-checkpoints/last.pth
+checkpoints/
 checkpoints_v2/
 checkpoints_v3/
 checkpoints_ft/

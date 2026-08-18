@@ -86,7 +86,7 @@ def psnr(pred, target, max_val=1.0):
 def parse_args():
     p = argparse.ArgumentParser()
     p.add_argument("--data_dir", default="data/train")
-    p.add_argument("--init", default="checkpoints/best.pth",
+    p.add_argument("--init", default="models/best.pth",
                    help="Starting v1 weights to fine-tune from")
     p.add_argument("--epochs", type=int, default=15)
     p.add_argument("--batch_size", type=int, default=4)

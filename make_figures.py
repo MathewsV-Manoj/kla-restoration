@@ -18,7 +18,7 @@ torch.backends.cudnn.deterministic = True
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 model = RestorationNet().to(device)
-ckpt = torch.load("checkpoints/best.pth", map_location=device)
+ckpt = torch.load("models/best.pth", map_location=device)
 model.load_state_dict(ckpt["model_state"])
 model.eval()
 

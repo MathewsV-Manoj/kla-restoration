@@ -14,7 +14,7 @@ USAGE (as specified in the submission requirements):
 Example:
     python inference.py data/Test_NoisyLR/NoisyLR outputs/restored
 
-The trained weights load automatically from ./checkpoints/best.pth. Each
+The trained weights load automatically from ./models/best.pth. Each
 restored image is saved as a 256x256 float32 .npy under the same filename
 as its input. The script prints end-to-end inference-speed statistics
 (mean / median per-image latency and throughput).
@@ -84,10 +84,13 @@ def run_inference(input_dir, output_dir, checkpoint, device):
         for f in files:
             t0 = time.perf_counter()
 
-            lr = np.load(f).astype(np.float32)          # (128,128), unclamped
+            # (128,128) unclamped; squeeze tolerates (H,W,1)/(1,H,W) inputs.
+            lr = np.squeeze(np.load(f)).astype(np.float32)
+            lr = np.nan_to_num(lr, nan=0.0, posinf=1.0, neginf=0.0)
             lr_t = torch.from_numpy(lr).unsqueeze(0).unsqueeze(0).to(device)
             pred = model(lr_t)                           # (1,1,256,256), [0,1]
             out = pred.squeeze().cpu().numpy().astype(np.float32)
+            out = np.clip(np.nan_to_num(out, nan=0.0, posinf=1.0, neginf=0.0), 0.0, 1.0)
             np.save(os.path.join(output_dir, os.path.basename(f)), out)
 
             if device.type == "cuda":
@@ -110,8 +113,8 @@ def parse_args():
     p.add_argument("input", help="Input directory of degraded NoisyLR .npy images")
     p.add_argument("output", nargs="?", default="outputs/restored",
                    help="Output directory for restored .npy images")
-    p.add_argument("--checkpoint", default="checkpoints/best.pth",
-                   help="Path to model weights (default: checkpoints/best.pth)")
+    p.add_argument("--checkpoint", default="models/best.pth",
+                   help="Path to model weights (default: models/best.pth)")
     return p.parse_args()
 
 
